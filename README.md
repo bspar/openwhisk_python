@@ -1,26 +1,50 @@
 # openwhisk_python
 Python wrapper for the Apache OpenWhisk REST API
 
-# openwhisk Module
-> WARNING: THIS IS PROOF-OF-CONCEPT LEVEL CODE.
->     DO NOT USE IN PRODUCTION YET!!!
->
->
-> Set of utility functions to communicate with OpenWhisk at Bluemix
->
->
-> Requires:
->     Define environment variable
->         OPENWHISK_TOKEN ~100 character authorization token with a colon ':'
->         can be found at https://console.ng.bluemix.net/openwhisk/learn/cli
->         or by doing `wsk property get`
->
-> Optional:
->     Define environment variables
->         OPENWHISK_APIHOST or will default to 'openwhisk.ng.bluemix.net'
->         OPENWHISK_NAMESPACE or will default to '_' (TOKEN's email address)
->
+# repl usage:
+```
+>>> import openwhisk
+>>> whisk = openwhisk.OpenWhisk()  # Assumes that $OPENWHISK_TOKEN has been set
+>>> whisk.namespaces
+['_', 'wendel_p_whisk@whisknamics.org_dev', 'wendel_p_whisk@whisknamics.org']
+>>> whisk.action_names
+['Hello World', 'Hello World With Params', 'python_action', 'zxcvb']
+>>> whisk.actions
+[{'name': 'python_action', 'publish': False, [...]}]
+>>> whisk.activations
+['echo', 'python_action']
+>>> whisk.activation_counts
+Counter({'echo': 30, 'python_action': 12})
+>>> whisk.rules
+[]
+>>> whisk.triggers
+[]
+>>> whisk.packages
+['Bluemix_Weather Company Data for IBM Bluemix-k6_Credentials-1']
+>>> whisk.invoke_echo('Anyone home!!')
+{'message': 'Anyone home!!'}
+>>> whisk.system_utils_invoke('echo', message='my message')
+{'message': 'my message'}
+```
 
+# openwhisk Module
+```
+WARNING: THIS IS PROOF-OF-CONCEPT LEVEL CODE.
+     DO NOT USE IN PRODUCTION YET!!!
+
+Set of utility functions to communicate with OpenWhisk at Bluemix
+
+Requires:
+    Define environment variable
+        OPENWHISK_TOKEN ~100 character authorization token with a colon ':'
+          can be found at https://console.ng.bluemix.net/openwhisk/learn/cli
+          or by doing `wsk property get`
+
+Optional:
+    Define environment variables
+        OPENWHISK_APIHOST or will default to 'openwhisk.ng.bluemix.net'
+        OPENWHISK_NAMESPACE or will default to '_' (TOKEN's email address)
+```
 
 ## Data
 - `DEBUG = False`
