@@ -32,6 +32,10 @@ Counter({'echo': 30, 'python_action': 12})<br>
 {'message': 'Anyone home!!'}<br>
 `>>>`**whisk.system_utils_invoke('echo', message='my message')**<br>
 {'message': 'my message'}
+`>>>`**whisk.action_create(filename='hello.py', action_name='python_hello')**<br>
+`>>>`**whisk.action_invoke('python_hello', name='Wendel')**<br>
+{'greeting': 'Hello Wendel!'}
+
 
 # openwhisk Module
 ```
