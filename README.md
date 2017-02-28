@@ -10,30 +10,28 @@ The openwhisk.py script needs a valid Open Whisk authentication token to initial
 * If all of these fail, it opens a webpage to see if the user can login, copy, and paste in their wsk auth
 
 # repl usage:
-```
->>> import openwhisk
->>> whisk = openwhisk.OpenWhisk()  # Assumes that $OPENWHISK_TOKEN environment variable has been set
->>> whisk.namespaces
-['_', 'wendel_p_whisk@whisknamics.org_dev', 'wendel_p_whisk@whisknamics.org']
->>> whisk.action_names
-['Hello World', 'Hello World With Params', 'python_action', 'zxcvb']
->>> whisk.actions
-[{'name': 'python_action', 'publish': False, [...]}]
->>> whisk.activations
-['echo', 'python_action']
->>> whisk.activation_counts
-Counter({'echo': 30, 'python_action': 12})
->>> whisk.rules
-[]
->>> whisk.triggers
-[]
->>> whisk.packages
-['Bluemix_Weather Company Data for IBM Bluemix-k6_Credentials-1']
->>> whisk.invoke_echo('Anyone home!!')
-{'message': 'Anyone home!!'}
->>> whisk.system_utils_invoke('echo', message='my message')
+`>>>`**import openwhisk** <br>
+`>>>`**whisk = openwhisk.OpenWhisk()** <&nbsp;># Assumes that $OPENWHISK_TOKEN environment variable has been set <br>
+`>>>`**whisk.namespaces** <br>
+['_', 'wendel_p_whisk@whisknamics.org_dev', 'wendel_p_whisk@whisknamics.org']<br>
+`>>>`**whisk.action_names**<br>
+['Hello World', 'Hello World With Params', 'python_action', 'xyz_action']<br>
+`>>>`**whisk.actions**<br>
+[{'name': 'python_action', 'publish': False, *[...]*}]<br>
+`>>>`**whisk.activations**<br>
+['echo', 'python_action']<br>
+`>>>`**whisk.activation_counts**<br>
+Counter({'echo': 30, 'python_action': 12})<br>
+`>>>`**whisk.rules**<br>
+[]<br>
+`>>>`**whisk.triggers**<br>
+[]<br>
+`>>>`**whisk.packages**<br>
+['Bluemix_Weather Company Data for IBM Bluemix-k6_Credentials-1']<br>
+`>>>`**whisk.invoke_echo('Anyone home!!')**<br>
+{'message': 'Anyone home!!'}<br>
+`>>>`**whisk.system_utils_invoke('echo', message='my message')**<br>
 {'message': 'my message'}
-```
 
 # openwhisk Module
 ```
