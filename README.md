@@ -1,10 +1,18 @@
 # openwhisk_python
 Python wrapper for the Apache OpenWhisk REST API
 
+The key prerequisite is an **Open Whisk authentication token** that is generated via the `wsk` command line interface (cli) tool or via a webpage of your Open Whisk server.  This authentication token is a ~100 character string with a ":" in it.  If you have the wsk cli tool, then you can do `wsk property get` to get your “wsk auth”.  Alternatively, if you are on Bluemix, you can get your authentication token by logging into https://console.ng.bluemix.net/openwhisk/learn/cli .
+
+The openwhisk.py script needs a valid Open Whisk authentication token to initialize and will attempt to accept this token in four different ways:
+* As a parameter in the `openwhisk.OpenWhisk()` call (unwieldy, but it works)
+* From a $OPENWHISK_TOKEN environment variable (recommended)
+* By importing a local `wsk_auth.py` which defines a *wsk_auth* variable
+* If all of these fail, it opens a webpage to see if the user can login, copy, and paste in their wsk auth
+
 # repl usage:
 ```
 >>> import openwhisk
->>> whisk = openwhisk.OpenWhisk()  # Assumes that $OPENWHISK_TOKEN has been set
+>>> whisk = openwhisk.OpenWhisk()  # Assumes that $OPENWHISK_TOKEN environment variable has been set
 >>> whisk.namespaces
 ['_', 'wendel_p_whisk@whisknamics.org_dev', 'wendel_p_whisk@whisknamics.org']
 >>> whisk.action_names
