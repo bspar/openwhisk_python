@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 def main(params):
     name = params.get("name", "stranger")
     greeting = "Hello " + name + "!"
