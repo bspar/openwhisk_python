@@ -7,13 +7,16 @@ python:
 #   - "nightly"  # currently points to 3.7-dev
 # command to install dependencies
 install:
+    - pip install .
     - pip install flake8
 # preflight
 before_script:
     flake8 . --count --max-line-length=127 --statistics --exit-zero
 # command to run tests
 # script: nosetests
-script: ls  # a basic no-op
+script:
+    - ./hello.py      # make sure example is still valid
+    - ./openwhisk.py  # self test
 notifications:
     on_success: change
     on_failure: always
