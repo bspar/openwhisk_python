@@ -15,6 +15,8 @@ before_script:
 # command to run tests
 # script: nosetests
 script:
+    - ls
+    - chmod +x *.py
     - ./hello.py      # make sure example is still valid
     - ./openwhisk.py  # self test
 notifications:
