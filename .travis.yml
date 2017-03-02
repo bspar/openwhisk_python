@@ -18,8 +18,9 @@ before_script:
 script:
     - ls
     - chmod +x *.py
-    - ./hello.py      # make sure example is still valid
-    - ./openwhisk.py  # self test
+    # - ./get_wsk_auth.py  # would do a webserver.open()
+    - ./hello.py           # make sure example is still valid
+    # - ./openwhisk.py     # self test will fail without a wsk_auth
 notifications:
     on_success: change
     on_failure: always
