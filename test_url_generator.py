@@ -10,7 +10,7 @@ urls0 = ['https://localhost/api/v1/namespaces/_/' + x for x in (
     'actions/n+A+m+E?overwrite=True',
 
     'activations',
-    'activations?name=n+A+m+E&docs=True',
+    'activations?name=docs=True&n+A+m+E',
     'activations?skip=1&limit=2',
     'activations?since=77&upto=99999999',
     'activations/activation_id',
@@ -34,7 +34,7 @@ urls0 = ['https://localhost/api/v1/namespaces/_/' + x for x in (
     'triggers/n+A+m+E?overwrite=True')]
 
 
-print(urls0)
+# print(urls0)
 
 gen = UrlGenerator()
 urls1 = [
