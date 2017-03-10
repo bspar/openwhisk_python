@@ -1,4 +1,4 @@
-# openwhisk_python
+# OpenWhisk Client Python
 Python wrapper for the Apache OpenWhisk REST API
 
 Start by instantiating an OpenWhisk object:
