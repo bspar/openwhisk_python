@@ -21,6 +21,9 @@ script:
     # - ./get_wsk_auth.py  # would do a webserver.open()
     - ./hello.py           # make sure example is still valid
     # - ./openwhisk.py     # self test will fail without a wsk_auth
+    - python test_data_types.py
+    - python test_logger.py
+    - python test_url_generator.py
 notifications:
     on_success: change
     on_failure: always
