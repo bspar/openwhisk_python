@@ -31,9 +31,9 @@
 """
 
 try:
-    from urllib.parse import urlencode  # Python 3
+    from urllib.parse import quote_plus, urlencode  # Python 3
 except ImportError:
-    from urllib import urlencode        # Python 2
+    from urllib import quote_plus, urlencode        # Python 2
 
 
 def url_finish(*args, **kwargs):
@@ -46,7 +46,7 @@ def url_finish(*args, **kwargs):
        kwargs are a dict of named values that are urlencoded to right of ?"""
     s = ''
     if args:
-        s = '/' + '/'.join(str(arg) for arg in args)
+        s = '/' + quote_plus('/'.join(str(arg) for arg in args), safe='/')
     if kwargs:
         s += '?' + urlencode(kwargs)
     return s
@@ -64,7 +64,7 @@ class UrlGenerator(object):
 
     @property
     def package(self):
-        return self._package
+        return self._package or ''
 
     @package.setter
     def package(self, package_name):
@@ -74,8 +74,8 @@ class UrlGenerator(object):
     def _curr_package(self):
         """URL is built dynamically using the current self.namespace.
            https://{host}/api/v1/namespaces/-[/packages/{package}]"""
-        return self.url_base + ('/packages/' +
-                                self._package) if self._package else ''
+        return self.url_base + ('/packages/' + self.package
+                                if self._package else '')
 
     def url_package(self, *args, **kwargs):
         return self.url_base + '/packages' + url_finish(*args, **kwargs)
