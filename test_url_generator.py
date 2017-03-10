@@ -45,7 +45,7 @@ urls1 = [
     gen.url_action('n A m E', overwrite=True),
 
     gen.url_activation(),
-    gen.url_activation(name='n A m E', docs=True),
+    gen.url_activation(docs=True, name='n A m E', ),
     gen.url_activation(skip=1, limit=2),
     gen.url_activation(since=77, upto=99999999),
     gen.url_activation('activation_id'),
