@@ -12,7 +12,7 @@ urls0 = ['https://localhost/api/v1/namespaces/_/' + x for x in (
     'activations',
     'activations?docs=True&name=n+A+m+E',
     'activations?skip=1&limit=2',
-    'activations?since=77&upto=99999999',
+    'activations?upto=99999999&since=77',
     'activations/activation_id',
     'activations/activation_id/logs',
     'activations/activation_id/result',
