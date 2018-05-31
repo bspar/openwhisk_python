@@ -32,11 +32,15 @@
 
 import collections
 import os
+import sys
 import pprint
 import requests
+import base64
 
-from get_wsk_auth import get_wsk_auth
 from url_generator import UrlGenerator
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEBUG = False
 
@@ -45,13 +49,13 @@ class OpenWhisk(object):
     """https://console.ng.bluemix.net/docs/openwhisk/openwhisk_reference.html
        https://console.ng.bluemix.net/apidocs/98-ibm-bluemix-openwhisk"""
 
-    def __init__(self, wsk_auth=None):
+    def __init__(self, wsk_auth, apihost='localhost', verify=True):
         """See: https://console.ng.bluemix.net/openwhisk/learn/cli  Your ~100
            char auth can be found at that URL or by doing `wsk property get`"""
         self.session = None
         # print(get_wsk_auth())
         # If wsk_auth token was not provided, then look it up in os.environ...
-        wsk_auth = wsk_auth or get_wsk_auth()
+        wsk_auth = wsk_auth
         try:
             wsk_auth = tuple(wsk_auth.split(':'))
         except:
@@ -60,9 +64,9 @@ class OpenWhisk(object):
                   'contain a colon (":").  See: `wsk property get`\n')
             raise
         self.session = requests.Session()  # speeds up repeated requests
+        self.session.verify = verify              # verify SSL certs (bool)
         self.session.auth = wsk_auth       # uses our auth token for all calls
-        self.gen = UrlGenerator(os.getenv('OPENWHISK_APIHOST',
-                                          'openwhisk.ng.bluemix.net'))
+        self.gen = UrlGenerator(apihost)
 
     def __del__(self):
         self.session.close()
@@ -87,17 +91,25 @@ class OpenWhisk(object):
     @property
     def action_names(self):
         """Returns a sorted list of the names of all actions."""
-        return sorted(action.get('name') for action in self.actions)
+        return sorted(action.get('name', 'Can\'t get action name') for action in self.actions)
 
-    def action_create(self, filename, action_name, *args, **kwargs):
+    def action_create(self, filename, action_name, runtime='python3', *args, **kwargs):
         """Uploads contents of the specified file to the specified action."""
         # Read the file into a string
-        with open(filename) as in_file:
+        with open(filename, 'rb') as in_file:
             code = in_file.read()
+        if filename.lower().split('.')[-1] == 'zip':
+            code = base64.b64encode(code)
+        code = code.decode('utf-8')
         # TODO: Support more languages beyond Python or NodeJS
-        kind = {'py': 'python'}.get(filename.lower().split('.')[-1], 'nodejs')
-        payload = {'exec': {'kind': kind, 'code': code}}
+        image = 'bspar/openwhisk-runtime-python:{}-latest'.format(runtime)
+        payload = {'exec': {'kind':'blackbox', 'code':code, 'image':image}}
         url = self.gen.url_action(action_name, *args, **kwargs)
+        return self._put(url, payload).json()
+
+    def sequence_create(self, sequence_name, action_names, *args, **kwargs):
+        payload = { 'exec': { 'kind' : 'sequence', 'components' : action_names }}
+        url = self.gen.url_action(sequence_name, *args, **kwargs)
         return self._put(url, payload).json()
 
     def action_delete(self, action_name, *args, **kwargs):
@@ -110,9 +122,11 @@ class OpenWhisk(object):
         '''url = (self.url_actions + '/' + action_name +
                '?blocking=true&result=false')'''
         payload = kwargs.pop('payload') if 'payload' in kwargs else {}
-        print('payload:', payload)
         url = self.gen.url_action(action_name, *args, **kwargs)
         return self._post(url, payload).json()
+
+    def action_get(self, action_name, *args, **kwargs):
+        return self.actions_list(action_name, *args, **kwargs)
 
     def actions_list(self, *args, **kwargs):
         """Lists the actions defined in openwhisk."""
@@ -140,19 +154,19 @@ class OpenWhisk(object):
                       in self.activations_list().json())
 
     def activation_info(self, activation_id):
-        """Returns a sorted list of the ids of all activation."""
-        return self.get(self.url_activations + '/' + activation_id)
+        """Returns info on the activation."""
+        url = self.gen.url_activation(activation_id)
+        return self._get(url).json()
 
     '''
     def activation_logs(self, activation_id):
         """Returns the logs for a given activation id."""
         return self.get(self.url_activations + '/' + activation_id + '/logs')
-
+    '''
     def activation_results(self, activation_id):
         """Returns a sorted list of the ids of all activation."""
-        return self.get(self.url_activations + '/' + activation_id +
-                        '/results')
-    '''
+        url = self.gen.url_activation(activation_id, 'result')
+        return self._get(url).json()
 
     def activations_list(self):
         """Lists the activations defined in openwhisk."""
@@ -302,37 +316,45 @@ class OpenWhisk(object):
 
 
 if __name__ == '__main__':
-    s = ',\n' + ' ' * 14
-    whisk = OpenWhisk()  # create an instance of an OpenWhisk object
+    s = ',\n' + ' ' * 14    # array separation
+    if len(sys.argv) <= 1:
+        print('-- pls supply api key (try `wsk property get`) --')
+        exit(-1)
+    whisk = OpenWhisk(sys.argv[1], verify=False)  # create an instance of an OpenWhisk object
+    print('\n ### Initial actions on this OpenWhisk ###')
     print(whisk.action_names)
-    DEBUG = True
-    print(whisk.action_create('hello.py', 'hello_python_new', overwrite=True))
-    print(whisk.action_invoke('hello_python_new', blocking=True, result=True))
-    DEBUG = False
+    whisk.action_create('hello/hello_zip.zip', 'hello_python', overwrite=True)
+
+    print('\n ### Testing blocking default hello_python ###')
+    print(whisk.action_invoke('hello_python', blocking=True, result=True))
+    print('\n ### Should include hello_python now ###')
     print(whisk.action_names)
 
-    # whisk.action_delete(action_name='hello_python_new')
-    # whisk.action_create(filename='hello.py', action_name='hello_python_new')
-    DEBUG = True
-    pprint.pprint(whisk.action_invoke('hello_python_new', blocking=True,
-                                      result=True, payload={'name': 'Wendel'}))
-    DEBUG = False
+    print('\n ### Testing params to hello_python ###')
     pprint.pprint(whisk.action_invoke('hello_python', blocking=True,
-                                      result=True,
-                                      payload={'name': 'Wendel P. Whisk'}))
+                                      result=True, payload={'name': 'Wendel'}))
 
-    # whisk.action_delete('test_data_types')
-    whisk.action_create('test_data_types.py', 'test_data_types', overwrite=True)
-    pprint.pprint(whisk.action_invoke('test_data_types', a='a',
-                                      payload={'name': 'Wendel P. Whisk'}))
+    from time import sleep
+    print('\n ### Testing async activation results ###')
+    act = whisk.action_invoke('hello_python', payload={'name': 'Wendel P. Whisk'})
+    res = whisk.activation_results(act['activationId'])
+    while res.get('error', None):
+        res = whisk.activation_results(act['activationId'])
+        sleep(1)
+    pprint.pprint(res)
     print('')
 
-    # whisk.action_delete('test_logger')
-    whisk.action_create('test_logger.py', 'test_logger', overwrite=True)
-    pprint.pprint(whisk.action_invoke('test_logger', a=0, b=True, c=1.7))
-    print('')
+    print('\n ### Testing sequence with params ###')
+    whisk.action_create('hello/hello.py', 'hello_python2', overwrite=True)
+    whisk.sequence_create('hello_sequence', ['guest/hello_python','guest/hello_python2'])
+    print(whisk.action_invoke('hello_sequence', blocking=True, result=True, payload={'name':'testy'}))
 
-    print('    actions: {}'.format(whisk.action_names))
+    print('\n ### Testing getting code for hello_python2 ###')
+    print(whisk.action_get('hello_python2', code=True)['exec']['code'])
+    print('\n ### Testing getting metadata for hello_python2 ###')
+    print(whisk.action_get('hello_python2', code=False))
+
+    print('\n\n    actions: {}'.format(whisk.action_names))
     print('activations: [{}]'.format(s.join(whisk.activation_ids)))
     print('   packages: {}'.format(whisk.packages))
     print('      rules: {}'.format(whisk.rules))
@@ -340,5 +362,21 @@ if __name__ == '__main__':
     print('')
     print('activation_counts: {}'.format(whisk.activation_counts))
     print('')
-    print(whisk.invoke_echo('Anyone home!!'))
-    print(whisk.system_utils_invoke('echo', message='my message'))
+    # print(whisk.invoke_echo('Anyone home!!'))
+    # print(whisk.system_utils_invoke('echo', message='my message'))
+
+    print('!!!Deleting all actions!!!')
+    whisk.action_delete('hello_python')
+    whisk.action_delete('hello_python2')
+    whisk.action_delete('hello_sequence')
+    print('    actions: {}'.format(whisk.action_names))
+    print('activations: [{}]'.format(s.join(whisk.activation_ids)))
+    print('   packages: {}'.format(whisk.packages))
+    print('      rules: {}'.format(whisk.rules))
+    print('   triggers: {}'.format(whisk.triggers))
+    print('')
+    print('1activation: ')
+    pprint.pprint(whisk.activation_info(whisk.activation_ids[0]))
+    print('')
+    print('activation_counts: {}'.format(whisk.activation_counts))
+    print('')
